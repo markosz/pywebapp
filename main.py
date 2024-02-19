@@ -1,26 +1,21 @@
-from decimal import *
-import subprocess 
 from flask import Flask, request
-#from subprocess import Popen, PIPE 
-from subprocess import check_output
 import time
 
 
 app = Flask(__name__)
 
-def calc_pi(reps):
-    getcontext().prec = reps
-    result = Decimal(3.0)
-    op = 1
-    n = 2
-    for n in range(2, 2*reps+1, 2):
-        result += 4/Decimal(n*(n+1)*(n+2)*op)
-        op *= -1
-    return result
-
-def get_shell_script_output_using_check_output(): 
-    stdout = check_output(['./bc.sh 500']).decode('utf-8')
-    return stdout
+def pi_digits(x): 
+    """Generate x digits of Pi.""" 
+    k,a,b,a1,b1 = 2,4,1,12,4 
+    while x > 0:
+        p,q,k = k * k, 2 * k + 1, k + 1 
+        a,b,a1,b1 = a1, b1, p*a + q*a1, p*b + q*b1 
+        d,d1 = a/b, a1/b1 
+        while d == d1 and x > 0:
+            yield int(d) 
+            x -= 1 
+            a,a1 = 10*(a % b), 10*(a1 % b1) 
+            d,d1 = a/b, a1/b1
 
 
 @app.route("/pi") 
@@ -28,14 +23,19 @@ def index():
     digits = int(request.args.get('d'))
     if digits == None:
         digits = 10
+
     start_time = time.time()
-    res = calc_pi(digits)
+    res = [str(n) for n in list(pi_digits(digits))] 
     end_time = time.time()
     delta_time = end_time - start_time
-    fmtd = "{0:.50f}".format(res)
 
-    return '<pre>'+str(res)+' ' +fmtd+ ' Time: '+str(delta_time)+'</pre>'
-    #return "Congratulations, it's a web app!"
+    res_str=str(res.pop(0))+'.'+"".join(res)
+
+    print_str=res_str
+    if digits > 50 :
+        print_str=res_str[0:50]+"..."
+
+    return '<pre>'+print_str+ ' Time: '+str(delta_time)+'</pre>'
 
 if __name__ == "__main__": 
     app.run(host="0.0.0.0", port=8080,  debug=True)
