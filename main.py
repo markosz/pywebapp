@@ -20,9 +20,11 @@ def pi_digits(x):
 
 @app.route("/pi") 
 def index():
-    digits = int(request.args.get('d'))
-    if digits == None:
+    param = request.args.get('d')
+    if param == None:
         digits = 10
+    else:
+        digits = int(param)
 
     start_time = time.time()
     res = [str(n) for n in list(pi_digits(digits))] 
